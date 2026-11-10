@@ -1,11 +1,12 @@
 ﻿using FinancialTracker.Domain.Exceptions;
+using FinancialTracker.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace FinancialTracker.Domain
 {
-    public record class Category
+    public record class Category : IEntity
     {
         public int Id { get; init; }
         public string Name { get; init; }

@@ -1,11 +1,12 @@
 ﻿using FinancialTracker.Domain.Exceptions;
+using FinancialTracker.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace FinancialTracker.Domain
 {
-    internal record class Transaction
+     record class Transaction : IEntity
     {
         public int Id { get; init; }
         public DateTime Date { get; init; }
