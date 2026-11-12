@@ -6,20 +6,27 @@ using System.Text;
 
 namespace FinancialTracker.Domain
 {
-     record class Transaction : IEntity
+     public record class Transaction : IEntity
     {
         public int Id { get; init; }
+        public int CategoryId { get; init; }
+
         public DateTime Date { get; init; }
         public TransactionType Type { get; init; }
         public Money Amount { get; init; }
 
         public string? Comment { get; init; }
 
-        public  Transaction(int id, DateTime date, TransactionType type,Money amount, string? comment = null)
+        public  Transaction(int id,int categoryId, DateTime date, TransactionType type,Money amount, string? comment = null)
         {
             if (id <= 0)
             {
                 throw new DomainValidationException("Id - натуральное число!");
+            }
+
+            if (categoryId <= 0)
+            {
+                throw new DomainValidationException("CategoryId - натуральное число!");
             }
 
             if (amount.Amount  <= 0)
@@ -40,6 +47,7 @@ namespace FinancialTracker.Domain
             Date = date;
             Type = type;
             Amount = amount;
+            CategoryId = categoryId;
             Comment = comment;
         }
     }

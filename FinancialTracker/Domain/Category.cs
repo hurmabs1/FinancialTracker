@@ -9,6 +9,8 @@ namespace FinancialTracker.Domain
     public record class Category : IEntity
     {
         public int Id { get; init; }
+
+        
         public string Name { get; init; }
         public TransactionType Type { get; init; }
 
@@ -18,6 +20,8 @@ namespace FinancialTracker.Domain
             {
                 throw new DomainValidationException("Id - натуральное число!");
             }
+
+            
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new DomainValidationException("Имя категории не может быть пустой.");

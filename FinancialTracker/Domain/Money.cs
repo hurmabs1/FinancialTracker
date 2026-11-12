@@ -8,7 +8,7 @@ namespace FinancialTracker.Domain
    
 {
 
-    readonly struct Money : IEquatable<Money>
+    public readonly struct Money : IEquatable<Money>
     {
         public readonly decimal Amount;
         public readonly string Currency;

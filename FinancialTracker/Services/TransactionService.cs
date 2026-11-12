@@ -1,10 +1,15 @@
-﻿using System;
+﻿using FinancialTracker.Domain;
+using FinancialTracker.Domain.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace FinancialTracker.Services
 {
-    internal class TransactionService
+    public class TransactionService
     {
+        private readonly IRepository<Transaction> _transactionRepository;
+        private readonly IRepository<Category> _categoryRepository;
+        
     }
 }
