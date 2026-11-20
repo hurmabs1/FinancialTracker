@@ -1,32 +1,34 @@
 ﻿using FinancialTracker.Domain;
 using FinancialTracker.Domain.Exceptions;
 using FinancialTracker.Domain.Interfaces;
+using FinancialTracker.Storage;
 
 
 namespace FinancialTracker.Services
 {
     public class CategoryService
     {
-
+        private readonly SettingsRepository _settingsRepository;
         private readonly IRepository<Category> _categoryRepository;
         private readonly IRepository<Transaction> _transactionRepository;
 
         private int _nextCategoryId;
 
 
-        public CategoryService(IRepository<Category> categoryRepository, IRepository<Transaction> transactionRepository)
+        public CategoryService(
+            IRepository<Category> categoryRepository,
+            IRepository<Transaction> transactionRepository,
+            SettingsRepository settingsRepository
+            )
         {
             _categoryRepository = categoryRepository;
             var _categoryRepositoryItems = categoryRepository.GetAll();
            _transactionRepository = transactionRepository;
-            if (_categoryRepositoryItems.Count == 0)
-            {
-                _nextCategoryId = 1;
-            }
-            else
-            {
-                _nextCategoryId = _categoryRepositoryItems.Select(x => x.Id).Max() + 1;
-            }
+            _settingsRepository = settingsRepository;
+
+            int maxExistingId = _categoryRepositoryItems.Count > 0 ? _categoryRepositoryItems.Max(x => x.Id) : 0;
+
+            _nextCategoryId = Math.Max( settingsRepository.GetInt("NextCategoryId", 1),  maxExistingId + 1);
         }
 
         public IReadOnlyList<Category> GetAll()
@@ -47,7 +49,9 @@ namespace FinancialTracker.Services
             }
 
             var newCategory = new Category(_nextCategoryId, name, type);
+
             _nextCategoryId++;
+            _settingsRepository.SetInt("NextCategoryId", _nextCategoryId);
 
             return _categoryRepository.Add(newCategory);
         }

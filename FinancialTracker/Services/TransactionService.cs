@@ -1,6 +1,7 @@
 ﻿using FinancialTracker.Domain;
 using FinancialTracker.Domain.Exceptions;
 using FinancialTracker.Domain.Interfaces;
+using FinancialTracker.Storage;
 
 namespace FinancialTracker.Services
 {
@@ -9,23 +10,27 @@ namespace FinancialTracker.Services
         private readonly IRepository<Transaction> _transactionRepository;
         private readonly IRepository<Category> _categoryRepository;
 
+        private readonly SettingsRepository _settingsRepository;
+
         private int _nextTransactionId;
 
-        public TransactionService(IRepository<Transaction> transactionRepository, IRepository<Category> categoryRepository)
+        public TransactionService(
+            IRepository<Transaction> transactionRepository,
+            IRepository<Category> categoryRepository,
+            SettingsRepository settingsRepository
+            )
         {
             _transactionRepository = transactionRepository;
             _categoryRepository = categoryRepository;
+            _settingsRepository = settingsRepository;
 
             var _transactionRepositoryItems = transactionRepository.GetAll();
 
-            if (_transactionRepositoryItems.Count == 0)
-            {
-                _nextTransactionId = 1;
-            }
-            else
-            {
-                _nextTransactionId = _transactionRepositoryItems.Select(x => x.Id).Max() + 1;
-            }
+            int maxExistingId = _transactionRepositoryItems.Count > 0 ? _transactionRepositoryItems.Max(x => x.Id) : 0;
+
+            _nextTransactionId = Math.Max(settingsRepository.GetInt("NextTransactionId", 1), maxExistingId + 1);
+
+           
         }
 
         public IReadOnlyList<Transaction> GetAll()
@@ -50,6 +55,7 @@ namespace FinancialTracker.Services
             var money = new Money(amount, currency);
             var newTransaction = new Transaction(_nextTransactionId, categoryId, date, type, money, comment);
             _nextTransactionId++;
+            _settingsRepository.SetInt("NextTransactionId", _nextTransactionId);
             return _transactionRepository.Add(newTransaction);
         }
 

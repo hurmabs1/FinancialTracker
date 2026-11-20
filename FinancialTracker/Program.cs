@@ -9,23 +9,27 @@ namespace FinancialTracker
     {
         static void Main(string[] args)
         {
-            // Временный тест сериализации
-            var cat = new Category(1, "Продукты", TransactionType.Expense);
-            string catLine = CsvSerializer.SerializeCategory(cat);
-            Console.WriteLine($"Сериализовано: {catLine}");
-            var catBack = CsvSerializer.DeserializeCategory(catLine);
-            Console.WriteLine($"Десериализовано: {catBack?.Name}");
+            var settingsRepo = new SettingsRepository("data/settings.csv");
+            var categoryRepo = new CsvFileRepository<Category>(
+    filePath: "data/categories.csv",
+    serializer: CsvSerializer.SerializeCategory,
+    deserializer: CsvSerializer.DeserializeCategory,
+    header: "Id;Name;Type");
 
-            var money = new Money(150.50m, "BYN");
-            var tran = new Transaction(1, 1, new DateTime(2026, 11, 14), TransactionType.Expense, money, "Хлеб; молоко\nи кефир");
-            string tranLine = CsvSerializer.SerializeTransaction(tran);
-            Console.WriteLine($"Сериализовано: {tranLine}");
-            var tranBack = CsvSerializer.DeserializeTransaction(tranLine);
-            Console.WriteLine($"Десериализовано: {tranBack?.Amount} | Коммент: {tranBack?.Comment}");
+            var transactionRepo = new CsvFileRepository<Transaction>(
+                filePath: "data/transactions.csv",
+                serializer: CsvSerializer.SerializeTransaction,
+                deserializer: CsvSerializer.DeserializeTransaction,
+                header: "Id;CategoryId;Date;Type;Amount;Currency;Comment");
+            DataSeeder.SeedCategories(categoryRepo);
 
-            Console.ReadKey();
-            return; // Не запускаем меню, чтобы посмотреть тест
+            // 3. Инициализация бизнес-логики (НИЧЕГО НЕ МЕНЯЕТСЯ!)
+            var categoryService = new CategoryService(categoryRepo, transactionRepo,settingsRepo);
+            var transactionService = new TransactionService(transactionRepo, categoryRepo, settingsRepo);
 
+            // 4. Запуск пользовательского интерфейса (НИЧЕГО НЕ МЕНЯЕТСЯ!)
+            var menu = new MainMenu(categoryService, transactionService);
+            menu.Run();
 
 
         }
