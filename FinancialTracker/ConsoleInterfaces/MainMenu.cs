@@ -32,9 +32,12 @@ namespace FinancialTracker.ConsoleInterfaces
                         ShowTransactions();
                         break;
                     case "3":
-                        ManageCategories();
+                        DeleteTransaction();
                         break;
                     case "4":
+                        ManageCategories();
+                        break;
+                    case "5":
                         Console.WriteLine("Вы выбрали: Аналитика (пока не реализовано)");
                         break;
                     case "0":
@@ -63,8 +66,9 @@ namespace FinancialTracker.ConsoleInterfaces
             Console.WriteLine("========================================");
             Console.WriteLine("1. Добавить операцию");
             Console.WriteLine("2. Показать операции");
-            Console.WriteLine("3. Управление категориями");
-            Console.WriteLine("4. Аналитика");
+            Console.WriteLine("3. Удалить операцию");
+            Console.WriteLine("4. Управление категориями");
+            Console.WriteLine("5. Аналитика");
             Console.WriteLine("0. Выход");
             Console.WriteLine("----------------------------------------");
             Console.Write("Выберите действие: ");
@@ -73,18 +77,18 @@ namespace FinancialTracker.ConsoleInterfaces
         private void AddTransaction()
 
         {
-            var _categoryServiceItems = _categoryService.GetAll();
+            var categoryServiceItems = _categoryService.GetAll();
 
             Console.WriteLine("Добавление новой операции ");
 
-            foreach (var cat in _categoryServiceItems)
+            foreach (var cat in categoryServiceItems)
             {
                 Console.WriteLine($"{cat.Id} , {cat.Name}, {cat.Type}");
             }
 
             int categoryId = ConsoleHelper.ReadInteger("Введите ID категории ");
 
-            var selectedCategory = _categoryServiceItems.FirstOrDefault(x => x.Id == categoryId);
+            var selectedCategory = categoryServiceItems.FirstOrDefault(x => x.Id == categoryId);
 
             if (selectedCategory == null)
             {
@@ -106,6 +110,13 @@ namespace FinancialTracker.ConsoleInterfaces
             catch (DomainValidationException ex)
             {
                 Console.WriteLine($"\nОШИБКА ДОБАВЛЕНИЯ: {ex.Message}");
+            }
+            catch (IOException ex)   // <-- НОВЫЙ CATCH
+            {
+                Console.WriteLine("\nОШИБКА СОХРАНЕНИЯ НА ДИСК!");
+                Console.WriteLine("Файл данных занят другой программой (Excel, OneDrive, антивирус).");
+                Console.WriteLine("Закройте файл данных и попробуйте снова.");
+                Console.WriteLine($"Подробности: {ex.Message}");
             }
         }
 
@@ -202,6 +213,13 @@ namespace FinancialTracker.ConsoleInterfaces
             {
                 Console.WriteLine($"ОШИБКА: {ex.Message}");
             }
+            catch (IOException ex) 
+            {
+                Console.WriteLine("\nОШИБКА СОХРАНЕНИЯ НА ДИСК!");
+                Console.WriteLine("Файл данных занят другой программой (Excel, OneDrive, антивирус).");
+                Console.WriteLine("Закройте файл данных и попробуйте снова.");
+                Console.WriteLine($"Подробности: {ex.Message}");
+            }
 
         }
         private void DeleteCategory()
@@ -224,7 +242,54 @@ namespace FinancialTracker.ConsoleInterfaces
                 {
                     Console.WriteLine($"ОШИБКА: {ex.Message}");
                 }
-            
+            catch (IOException ex)   // <-- НОВЫЙ CATCH
+            {
+                Console.WriteLine("\nОШИБКА СОХРАНЕНИЯ НА ДИСК!");
+                Console.WriteLine("Файл данных занят другой программой (Excel, OneDrive, антивирус).");
+                Console.WriteLine("Закройте файл данных и попробуйте снова.");
+                Console.WriteLine($"Подробности: {ex.Message}");
+            }
+
+        }
+
+        private void DeleteTransaction()
+        {
+            Console.WriteLine("--- Удаление операции ---");
+
+            if (_transactionService.GetAll().Count == 0)
+            {
+                Console.WriteLine("Операций пока нет. Удалять нечего.");
+                return;
+            }
+            ShowTransactions();
+            int id = ConsoleHelper.ReadInteger("Введите Id операции для удаления: ");
+            string? agreement = ConsoleHelper.ReadString("Вы уверены? (да/нет): ");
+            if(agreement.Equals("да",StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    _transactionService.Delete(id);
+                    Console.WriteLine("Операция успешно удалена ");
+                }
+                catch (DomainValidationException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine("\nОШИБКА СОХРАНЕНИЯ НА ДИСК!");
+                    Console.WriteLine("Файл данных занят другой программой (Excel, OneDrive, антивирус).");
+                    Console.WriteLine("Закройте файл данных и попробуйте снова.");
+                    Console.WriteLine($"Подробности: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Отмена операции удаления ");
+                return;
+            }
+
+           
         }
     }
 }

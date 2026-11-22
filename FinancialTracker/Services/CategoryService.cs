@@ -22,11 +22,11 @@ namespace FinancialTracker.Services
             )
         {
             _categoryRepository = categoryRepository;
-            var _categoryRepositoryItems = categoryRepository.GetAll();
+            var categoryRepositoryItems = categoryRepository.GetAll();
            _transactionRepository = transactionRepository;
             _settingsRepository = settingsRepository;
 
-            int maxExistingId = _categoryRepositoryItems.Count > 0 ? _categoryRepositoryItems.Max(x => x.Id) : 0;
+            int maxExistingId = categoryRepositoryItems.Count > 0 ? categoryRepositoryItems.Max(x => x.Id) : 0;
 
             _nextCategoryId = Math.Max( settingsRepository.GetInt("NextCategoryId", 1),  maxExistingId + 1);
         }

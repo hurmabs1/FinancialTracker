@@ -65,6 +65,7 @@ namespace FinancialTracker.Storage
             using var reader = new StreamReader(_filePath);
             string? line;
             bool isFirstLine = true;
+            int skippedLines = 0;
             while ((line = reader.ReadLine()) != null)
             {
                 if (isFirstLine)
@@ -75,6 +76,16 @@ namespace FinancialTracker.Storage
                 if (string.IsNullOrEmpty(line)) continue;
                 var entity = _deserializer(line);
                 if (entity != null) _items.Add(entity);
+                else
+                {
+                    skippedLines++;
+                }
+            }
+
+            if (skippedLines > 0)
+            {
+                Console.WriteLine($"[ВНИМАНИЕ] Файл {_filePath}: пропущено {skippedLines} поврежденных строк.");
+                Console.WriteLine("Проверьте формат файла (разделитель ';' и дата в формате ГГГГ-ММ-ДД).");
             }
         }
 
