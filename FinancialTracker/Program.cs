@@ -10,7 +10,7 @@ namespace FinancialTracker
         static void Main(string[] args)
         {
             try
-            {
+            {   
                 var settingsRepo = new SettingsRepository("data/settings.csv");
                 var categoryRepo = new CsvFileRepository<Category>(
                     filePath: "data/categories.csv",
@@ -26,10 +26,12 @@ namespace FinancialTracker
 
                 DataSeeder.SeedCategories(categoryRepo);
 
+                var analyticsService = new AnalyticsService(transactionRepo, categoryRepo);
+
                 var categoryService = new CategoryService(categoryRepo, transactionRepo, settingsRepo);
                 var transactionService = new TransactionService(transactionRepo, categoryRepo, settingsRepo);
 
-                var menu = new MainMenu(categoryService, transactionService);
+                var menu = new MainMenu(categoryService, transactionService, analyticsService);
                 menu.Run();
             }
             catch (IOException ex)

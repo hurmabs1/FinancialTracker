@@ -1,6 +1,5 @@
 ﻿using FinancialTracker.Domain.Exceptions;
 using FinancialTracker.Services;
-
 namespace FinancialTracker.ConsoleInterfaces
 {
     public class MainMenu
@@ -9,10 +8,13 @@ namespace FinancialTracker.ConsoleInterfaces
         private readonly CategoryService _categoryService;
         private readonly TransactionService _transactionService;
 
-        public MainMenu(CategoryService categoryService, TransactionService transactionService)
+        private readonly AnalyticsService _analyticsService;
+
+        public MainMenu(CategoryService categoryService, TransactionService transactionService, AnalyticsService analyticsService)
         {
             _categoryService = categoryService;
             _transactionService = transactionService;
+            _analyticsService = analyticsService;
         }
 
         public void Run()
@@ -38,7 +40,7 @@ namespace FinancialTracker.ConsoleInterfaces
                         ManageCategories();
                         break;
                     case "5":
-                        Console.WriteLine("Вы выбрали: Аналитика (пока не реализовано)");
+                        ShowAnalyticsMenu();
                         break;
                     case "0":
                         Console.WriteLine("Выход из программы. До свидания!");
@@ -291,5 +293,149 @@ namespace FinancialTracker.ConsoleInterfaces
 
            
         }
+
+        private void ShowOverallAnalytics()
+        {
+            Console.WriteLine("--- Аналитика ---");
+            Console.WriteLine($"Общий доход: {_analyticsService.GetTotalIncome():F2} BYN");
+            Console.WriteLine($"Общий расход: {_analyticsService.GetTotalExpense():F2} BYN");
+            decimal balance = _analyticsService.GetBalance();
+            if (balance < 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
+            Console.WriteLine($"Текущий баланс: {balance:F2}  BYN");
+            Console.ResetColor();
+            Console.WriteLine("--- Расходы по категориям ---");
+            var report = _analyticsService.GetExpensesByCategory();
+
+            if (report.Count == 0) Console.WriteLine("Расходов пока нет. ");
+            else
+            {
+                foreach(var item in report)
+                {
+                    Console.WriteLine($"{item.CategoryName,-20} {item.Total:F2} BYN");
+                }
+            }
+
+
+
+        }
+        private void ShowAnalyticsMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+
+                Console.WriteLine("========================================");
+                Console.WriteLine("              АНАЛИТИКА ");
+                Console.WriteLine("========================================");
+                Console.WriteLine("1. Общая статистика (за всё время) ");
+                Console.WriteLine("2. Статистика за месяц");
+                Console.WriteLine("3. Топ-5 расходов");
+                Console.WriteLine("4. Средний расход в день");
+                Console.WriteLine("0. Назад в главное меню");
+                Console.WriteLine("----------------------------------------");
+                Console.Write("Выберите действие: ");
+
+                string? input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        ShowOverallAnalytics();
+                        break;
+
+                    case "2":
+                        ShowMonthlyAnalytics();
+                        break;
+
+                    case "3":
+                        ShowTopExpenses();
+                        break;
+
+                    case "4":
+                        ShowAverageDailyExpense();
+                        break;
+
+                    case "0":
+                        return;
+
+
+                    default:
+                        Console.WriteLine("Неверный ввод ");
+                        break;
+
+                }
+
+                if (input != "0")
+                {
+                    Console.WriteLine("Нажмите любую клавишу для продолжения...");
+                    Console.ReadKey();
+                }
+            }
+        }
+
+        private void ShowMonthlyAnalytics()
+        {
+            Console.WriteLine("\n--- Статистика за месяц ---");
+            int year = ConsoleHelper.ReadInteger("Введите год (например, 2026): ");
+
+            int month = ConsoleHelper.ReadInteger("Введите месяц (1-12): ");
+
+            if(month < 1 || month > 12)
+            {
+                Console.WriteLine("Ошибка: месяц должен быть от 1 до 12.");
+                return;
+            }
+
+            if (year < 2000 || year > DateTime.Now.Year + 1)
+            {
+                Console.WriteLine($"Ошибка: год должен быть между 2000 и {DateTime.Now.Year + 1}.");
+                return;
+            }
+
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+
+            var summary = _analyticsService.GetSummaryForPeriods(start, end);
+
+            Console.WriteLine($"Период: {start:MMMM yyyy}");  
+            Console.WriteLine($"Доход:   {summary.Income:F2} BYN");
+            Console.WriteLine($"Расход:  {summary.Expense:F2} BYN");
+
+            if (summary.Balance < 0) Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Баланс:  {summary.Balance:F2} BYN");
+            Console.ResetColor();
+        }
+
+        private void ShowTopExpenses()
+        {
+            Console.WriteLine("\n--- Топ-5 самых крупных расходов ---");
+            var top = _analyticsService.GetTopExpenses(5);
+
+            if (top.Count == 0)
+            {
+                Console.WriteLine("Расходов пока нет.");
+                return;
+            }
+
+            int rank = 1;
+            foreach (var item in top)
+            {
+                Console.WriteLine($"{rank}. {item.Date.ToShortDateString()} | {item.CategoryName,-15} | {item.Amount:F2} BYN");
+                rank++;
+            }
+        }
+
+        private void ShowAverageDailyExpense()
+        {
+            Console.WriteLine("\n--- Средний расход в день ---");
+            decimal average = _analyticsService.GetAverageDailyExpense();
+            Console.WriteLine($"Средний расход: {average:F2} BYN/день");
+            Console.WriteLine("(считается от первой операции до сегодня)");
+        }
     }
+
+    
 }
